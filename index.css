@@ -1,0 +1,21 @@
+body {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.button.newStory {
+  /* display: inline-block; */
+}
+
+.container {
+  justify-content: center;
+  width: 100%;
+  border-radius: 10px;
+}
+
+.navbar {
+  background-color: #ff6600;
+}
+
+.body {
+  background-color: #fff;
+}
