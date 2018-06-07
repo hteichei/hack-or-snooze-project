@@ -19,3 +19,8 @@ body {
 .body {
   background-color: #fff;
 }
+
+.hostName {
+  font-size: 12px;
+  padding: 0 5px;
+}
