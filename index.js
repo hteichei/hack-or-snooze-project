@@ -6,10 +6,6 @@ let stories = [];
 $(function() {
   $.getJSON('https://hack-or-snooze.herokuapp.com/stories?skip=0&limit=10')
     .then(function(data) {
-      // data.data.forEach(function(name) {
-      //   list.append(`<li>${name.title} (${name.url})</li>`);
-      //   // console.log(name.title);
-      // });
       stories = data.data;
       displayTenStories(stories);
     })
@@ -107,3 +103,55 @@ function submit(event) {
 
 $('#loginForm').submit(logIn);
 $('#submitForm').submit(submit);
+$('#signUpForm').submit(signUp);
+
+//everything from here down needs to be refactored
+
+function signUp(event) {
+  event.preventDefault();
+  let signup_name = $('#signup_username').val();
+  let data = {
+    data: {
+      name: $('#signup_name').val(),
+      username: $('#signup_username').val(),
+      password: $('#signup_password').val()
+    }
+  };
+  $.post('https://hack-or-snooze.herokuapp.com/users', data, 'json')
+    .then(function(msg) {
+      localStorage.setItem('username', signup_name);
+      $('#signUpForm').slideToggle();
+      $('#signUpForm > form')[0].reset();
+      $('#loginLink').hide();
+      $('#signUpLink').hide();
+      console.log(msg);
+    })
+    .catch(function(error) {
+      console.log(error);
+    });
+  signUpLogIn();
+}
+
+//modified logIn function used to call function in the signup function
+function signUpLogIn() {
+  let user_name = $('#login_username').val();
+  let data = {
+    data: {
+      username: $('#signup_username').val(),
+      password: $('#signup_password').val()
+    }
+  };
+  $.post('https://hack-or-snooze.herokuapp.com/auth', data, 'json')
+    .then(function(msg) {
+      localStorage.setItem('token', msg.data.token);
+      // localStorage.setItem('username', user_name);
+      // $('#loginForm').slideToggle();
+      // $('#loginForm > form')[0].reset();
+      // $('#loginLink').hide();
+      // $('#signUpLink').hide();
+      console.log(msg);
+    })
+    .catch(function(error) {
+      console.log(error);
+    });
+}
