@@ -10,9 +10,11 @@ $(document).ready(function() {
         stories = data.data;
         data.data.forEach(function(name) {
           list.append(
-            `<li>${name.title} <span class='hostName'>(${name.url
+            `<li><i class="far fa-star"></i><a href=${name.url}<li>${
+              name.title
+            } </a><span class='hostName'>(${name.url
               .split('/')[2]
-              .split('.')[1] + '.com'})</span></li>`
+              .split('.')[1] + '.com'})</span></li></li>`
           );
           // console.log(name.title);
         });
@@ -23,12 +25,9 @@ $(document).ready(function() {
       });
   });
 
-  // function displayTenStories(d) {
-  //   d.forEach(function(name) {
-  //     list.append(`<li>${name.title} (${url})</li>`);
-  //     // console.log(name.title);
-  //   });
-  // }
+  $('#storyList').on('click', 'i', function(event) {
+    $(event.target).toggleClass('fas fa-star far fa-star');
+  });
 
   $('#loginLink').on('click', function() {
     $('#signUpForm').hide();
@@ -60,13 +59,23 @@ $(document).ready(function() {
         localStorage.setItem('username', user_name);
         $('#loginForm').slideToggle();
         $('#loginForm > form')[0].reset();
-        $('#loginLink').hide();
+        $('#loginLink').text('Logout');
+        $('#loginLink').click(logMeOut);
         $('#signUpLink').hide();
         console.log(msg);
       })
       .catch(function(error) {
         console.log(error);
       });
+  }
+
+  function logMeOut() {
+    debugger;
+    localStorage.clear();
+    '#loginLink'.text('Login');
+    '#signUpLink'.show();
+    //trying to remove toggle functionality from logOutLink NOT WORKING
+    $('#logInForm').css('display', 'none');
   }
 
   function submit(event) {
@@ -160,3 +169,29 @@ $(document).ready(function() {
       });
   }
 });
+
+//Get stories posted by user for the user profile
+function fetchUserStories() {
+  let userName = localStorage.getItem('username');
+  let token = localStorage.getItem('token');
+  $.ajax({
+    url: `https://hack-or-snooze.herokuapp.com/users/${userName}`,
+    method: 'GET',
+    dataType: 'json',
+    headers: {
+      'content-type': 'application/json',
+      Authorization: `Bearer ${token}`
+    }
+  })
+    .then(function(response) {
+      console.log(response);
+      response.data.stories.forEach(function(story) {
+        console.log(story.title);
+      });
+    })
+    .catch(function(error) {
+      console.log(error);
+    });
+}
+
+fetchUserStories();
