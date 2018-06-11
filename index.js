@@ -1,33 +1,94 @@
 $(document).ready(function() {
-  var user_name;
-  var list = $('#storyList');
-  let count = 0;
-  let stories = [];
+  checkIfLoggedIn();
+  appendUserData();
+  toggleStoryList();
+  $('#loginForm').submit(logIn);
+  $('#submitForm').submit(submit);
+  $('#signUpForm').submit(signUp);
+  fetchUserStories();
+  handleFavorites();
 
   $(function() {
-    $.getJSON('https://hack-or-snooze.herokuapp.com/stories?skip=0&limit=10')
+    let list = $('#storyList');
+    $.getJSON('https://hack-or-snooze.herokuapp.com/stories?skip=0&limit=11')
       .then(function(data) {
         stories = data.data;
         data.data.forEach(function(name) {
           list.append(
-            `<li><i class="far fa-star"></i><a href=${name.url}<li>${
+            `<li class='storyListElement'><i id=${
+              name.storyId
+            } class="far fa-star"></i><a href=${name.url}<li>${
               name.title
+              /* extract host from URL. Credit: https://stackoverflow.com/a/8498629 */
             } </a><span class='hostName'>(${name.url
-              .split('/')[2]
-              .split('.')[1] + '.com'})</span></li></li>`
+              .match(/^https?:\/\/([^/?#]+)(?:[/?#]|$)/i)[1]
+              .replace('www.', '')})</span></li></li>`
           );
-          // console.log(name.title);
         });
-        // displayTenStories(stories);
       })
       .catch(function(error) {
         console.log(error);
       });
   });
 
-  $('#storyList').on('click', 'i', function(event) {
-    $(event.target).toggleClass('fas fa-star far fa-star');
-  });
+  function handleFavorites() {
+    $('#storyList').on('click', 'i', function(event) {
+      // event.preventDefault();
+      let userName = localStorage.getItem('username');
+      let token = localStorage.getItem('token');
+      let storyId = $(event.target).attr('id');
+      let parent = $(event.target)
+        .parent()
+        .clone();
+      $(event.target).toggleClass('fas fa-star far fa-star');
+      if ($(event.target).hasClass('fas')) {
+        console.log(storyId);
+        $.ajax({
+          url: `https://hack-or-snooze.herokuapp.com/users/${userName}/favorites/${storyId}`,
+          method: 'POST',
+          dataType: 'json',
+          headers: {
+            'content-type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        })
+          .then(function(response) {
+            console.log(response);
+            $('#favoritesList').append($(parent));
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      } else {
+        $.ajax({
+          url: `https://hack-or-snooze.herokuapp.com/users/${userName}/favorites/${storyId}`,
+          method: 'DELETE',
+          dataType: 'json',
+          headers: {
+            'content-type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        })
+          .then(function(response) {
+            console.log(response);
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      }
+    });
+  }
+
+  function checkIfLoggedIn() {
+    if (
+      localStorage.token !== undefined &&
+      localStorage.username !== undefined
+    ) {
+      $('#signUpLink').hide();
+      $('#loginLink').text('Logout');
+      $('#loginLink').click(logMeOut);
+    }
+  }
 
   $('#loginLink').on('click', function() {
     $('#signUpForm').hide();
@@ -39,9 +100,30 @@ $(document).ready(function() {
     $('#signUpForm').slideToggle();
   });
 
+  $('#favoritesLink').on('click', function() {
+    $('#favoritesContainer').slideToggle();
+  });
+
   $('#submitBtn').on('click', function() {
     $('#submitForm').slideToggle();
   });
+
+  $('#userProfile').on('click', function() {
+    $('#userProfileForm').slideToggle();
+    $('#userProfileForm').toggleClass('harry');
+    let userName = localStorage.getItem('username');
+    let name = localStorage.getItem('name');
+    $('#spotForName').text(`${name}`);
+    $('#spotForUserName').text(`${userName}`);
+  });
+
+  function toggleStoryList() {
+    if ($('#userProfileForm').hasClass('harry')) {
+      $('#storyListContainer').hide();
+    } else {
+      $('#storyListContainer').show();
+    }
+  }
 
   function logIn(event) {
     event.preventDefault();
@@ -52,9 +134,9 @@ $(document).ready(function() {
         password: $('#login_password').val()
       }
     };
-
     $.post('https://hack-or-snooze.herokuapp.com/auth', data, 'json')
       .then(function(msg) {
+        console.log(msg);
         localStorage.setItem('token', msg.data.token);
         localStorage.setItem('username', user_name);
         $('#loginForm').slideToggle();
@@ -62,7 +144,7 @@ $(document).ready(function() {
         $('#loginLink').text('Logout');
         $('#loginLink').click(logMeOut);
         $('#signUpLink').hide();
-        console.log(msg);
+        window.location.reload();
       })
       .catch(function(error) {
         console.log(error);
@@ -70,11 +152,13 @@ $(document).ready(function() {
   }
 
   function logMeOut() {
-    debugger;
     localStorage.clear();
-    '#loginLink'.text('Login');
-    '#signUpLink'.show();
-    //trying to remove toggle functionality from logOutLink NOT WORKING
+    $('#spotForName').text('');
+    $('#spotForUserName').text('');
+    $('#myStoriesList').empty();
+    $('#userProfileForm').hide();
+    $('#loginLink').text('Login');
+    $('#signUpLink').show();
     $('#logInForm').css('display', 'none');
   }
 
@@ -86,17 +170,12 @@ $(document).ready(function() {
     let data = {
       data: {
         author: author,
-
         title: title,
-
         url: url,
-
         username: localStorage.getItem('username')
       }
     };
-
     let token = localStorage.getItem('token');
-
     $.ajax({
       url: 'https://hack-or-snooze.herokuapp.com/stories',
       method: 'POST',
@@ -109,28 +188,21 @@ $(document).ready(function() {
     })
       .then(function(msg) {
         list.append(`<li>${title} (${url})</li>`);
-
         $('#submitForm > form')[0].reset();
-
-        console.log(msg);
+        window.location.reload();
       })
       .catch(function(error) {
         console.log(error);
       });
   }
 
-  $('#loginForm').submit(logIn);
-  $('#submitForm').submit(submit);
-  $('#signUpForm').submit(signUp);
-
-  //everything from here down needs to be refactored
-
-  function signUp(event) {
-    event.preventDefault();
+  function signUp() {
+    // event.preventDefault();
     let signup_name = $('#signup_username').val();
+    let full_name = $('#signup_name').val();
     let data = {
       data: {
-        name: $('#signup_name').val(),
+        name: full_name,
         username: $('#signup_username').val(),
         password: $('#signup_password').val()
       }
@@ -138,60 +210,50 @@ $(document).ready(function() {
     $.post('https://hack-or-snooze.herokuapp.com/users', data, 'json')
       .then(function(msg) {
         localStorage.setItem('username', signup_name);
+        localStorage.setItem('name', full_name);
         $('#signUpForm').slideToggle();
         $('#signUpForm > form')[0].reset();
-        $('#loginLink').hide();
         $('#signUpLink').hide();
         console.log(msg);
       })
       .catch(function(error) {
         console.log(error);
       });
-    signUpLogIn();
+    alert('Please proceed to Login to confirm credentials!');
   }
 
-  //modified logIn function used to call function in the signup function
-  function signUpLogIn() {
-    let user_name = $('#login_username').val();
-    let data = {
-      data: {
-        username: $('#signup_username').val(),
-        password: $('#signup_password').val()
+  //Get stories posted by user for the user profile
+  function fetchUserStories() {
+    let userName = localStorage.getItem('username');
+    let token = localStorage.getItem('token');
+    $.ajax({
+      url: `https://hack-or-snooze.herokuapp.com/users/${userName}`,
+      method: 'GET',
+      dataType: 'json',
+      headers: {
+        'content-type': 'application/json',
+        Authorization: `Bearer ${token}`
       }
-    };
-    $.post('https://hack-or-snooze.herokuapp.com/auth', data, 'json')
-      .then(function(msg) {
-        localStorage.setItem('token', msg.data.token);
-        console.log(msg);
+    })
+      .then(function(response) {
+        console.log(response);
+        localStorage.setItem('name', response.data.name);
+        response.data.stories.forEach(function(story) {
+          $('#myStoriesList').append(
+            `<li><a href=${story.url} target='blank'>${story.title}</a></li>`
+          );
+        });
       })
       .catch(function(error) {
         console.log(error);
       });
   }
+
+  //append user information to the userData section of userProfile
+  function appendUserData() {
+    let userName = localStorage.getItem('username');
+    let name = localStorage.getItem('name');
+    $('#spotForName').text(`${name}`);
+    $('#spotForUserName').text(`${userName}`);
+  }
 });
-
-//Get stories posted by user for the user profile
-function fetchUserStories() {
-  let userName = localStorage.getItem('username');
-  let token = localStorage.getItem('token');
-  $.ajax({
-    url: `https://hack-or-snooze.herokuapp.com/users/${userName}`,
-    method: 'GET',
-    dataType: 'json',
-    headers: {
-      'content-type': 'application/json',
-      Authorization: `Bearer ${token}`
-    }
-  })
-    .then(function(response) {
-      console.log(response);
-      response.data.stories.forEach(function(story) {
-        console.log(story.title);
-      });
-    })
-    .catch(function(error) {
-      console.log(error);
-    });
-}
-
-fetchUserStories();

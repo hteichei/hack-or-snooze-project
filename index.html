@@ -16,7 +16,7 @@
 
 <body>
   <div class='container'>
-    <nav class="navbar navbar-expand-lg navbar-light">
+    <nav class="navbar navbar-expand-lg navbar-light rounded-top">
       <a class="navbar-brand" href="#">Hack-or-Snoozer</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
         aria-expanded="false" aria-label="Toggle navigation">
@@ -29,7 +29,7 @@
             <a class="nav-link" data-toggle='collapse' data-target='form' id='submitBtn'>Submit</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link">Favorites</a>
+            <a id='favoritesLink' class="nav-link">Favorites</a>
           </li>
           <li class="nav-item">
             <a id='userProfile' class="nav-link">Profile</a>
@@ -46,22 +46,28 @@
       </div>
     </nav>
 
-    <div class='body'>
+    <div class='body rounded-bottom'>
 
-      <div id="userProfile">
-        <div id='favorites'>
-          <h2>Favorites</h2>
-          <ol id='favoritesList'></ol>
-        </div>
+      <div class='collapse' id="userProfileForm">
         <div id="userData">
           <h2>User Data</h2>
-          <p>Name: </p>
-          <p>Username:</p>
+          <p id='userDataName'>Name: <span id='spotForName'></span></p>
+          <p id='userDataUserName'>Username: <span id='spotForUserName'></span></p>
         </div>
         <div id="myStories">
           <h2>My Stories</h2>
-          <ol id='myStoriesList'></ol>
+          <ol id='myStoriesList'>
+          </ol>
         </div>
+        <hr>
+      </div>
+
+      <div class='collapse' id='favoritesContainer'>
+      <div id='favorites'>
+          <h2>Favorites</h2>
+          <ol id='favoritesList'></ol>
+        </div>
+        <hr>
       </div>
 
       <div class='collapse' id='submitForm'>
@@ -118,12 +124,15 @@
           <button type="submit" class="btn btn-primary">Submit</button>
         </form>
       </div>
-      <ol id='storyList'>
-
-      </ol>
+      <div class='collapse' id='storyListContainer'>
+         <ol id='storyList'></ol>
+      </div>
     </div>
   </div>
 
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-hover-dropdown/2.2.1/bootstrap-hover-dropdown.js'></script>
   <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
   <script src='index.js'></script>
 </body>
